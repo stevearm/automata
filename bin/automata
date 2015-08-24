@@ -1,0 +1,17 @@
+#!/usr/bin/python
+
+import argparse
+import logging
+
+import automata.diffusion
+
+def main():
+    logging.basicConfig(level=logging.ERROR)
+    parser = argparse.ArgumentParser(description="Simulate some things")
+    parser.add_argument("--verbose", action="store_true", help="Print lots of messages")
+
+    args = parser.parse_args()
+    automata.diffusion.run()
+
+if __name__ == "__main__":
+    main()

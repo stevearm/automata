@@ -1,6 +1,6 @@
 import random
 
-import Image
+from   PIL import Image
 import moviepy.editor as mpy
 import numpy as np
 
