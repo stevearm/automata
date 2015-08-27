@@ -14,16 +14,24 @@ def scale_2d_array(array_2d, new_min, new_max, current_min=None, current_max=Non
         current_min (number): If specified, use as the current min (scale the array as if this was the lowest number)
         current_max (number): If specified, use as the current max (scale the array as if this was the highest number)
     """
+    if new_max <= new_min:
+        raise ValueError("Cannot specify a new_max {} <= new_max {}".format(new_max, new_min))
     if current_min is None:
         current_min = array_2d.min()
     elif array_2d.min() < current_min:
         raise ValueError("Cannot specify a current_min of {} that is higher than the real min of {}".format(current_min, array_2d.min()))
+
     if current_max is None:
         current_max = array_2d.max()
     elif current_max < array_2d.max():
         raise ValueError("Cannot specify a current_max of {} that is lower than the real max of {}".format(current_max, array_2d.max()))
-    zeroed = array_2d - array_2d.min() + new_min
-    return zeroed * new_max / zeroed.max()
+
+    current_skew = current_max - current_min
+    new_skew = new_max - new_min
+
+    zeroed = array_2d - current_min
+    rescaled = zeroed * new_skew / current_skew
+    return rescaled + new_min
 
 def convert_2d_array_to_rgb(array_2d):
     """ Convert the given array into an array of 8-bit RGB values
