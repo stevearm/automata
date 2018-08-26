@@ -1,5 +1,6 @@
 import numpy as np
 
+import automata.scenario
 
 seeds = {
     "diehard": [
@@ -34,22 +35,19 @@ seeds = {
     ],
 }
 
-def seed(universe_size=[100,100], seed="infinite", seed_position=[40,40]):
-    # Initialise the universe and seed
-    universe = np.zeros(universe_size)
-    x_start, y_start = seed_position[0], seed_position[1]
-    seed_array = np.array(seeds[seed])
-    x_end, y_end = x_start + seed_array.shape[0], y_start + seed_array.shape[1]
-    universe[x_start:x_end, y_start:y_end] = seed_array
-    return universe
+class Life(automata.scenario.Scenario):
 
-def blockSeed():
-    return seed(seed="block_switch_engine")
+    def __init__(self, dimensions=[100,100], seed="infinite", seed_position=[40,40]):
+        super(Life, self).__init__(dimensions=dimensions)
+        x_start, y_start = seed_position[0], seed_position[1]
+        seed_array = np.array(seeds[seed])
+        x_end, y_end = x_start + seed_array.shape[0], y_start + seed_array.shape[1]
+        self._universe[x_start:x_end, y_start:y_end] = seed_array
 
-def step(x, y, universe):
-    num_neighbours = np.sum(universe[x - 1 : x + 2, y - 1 : y + 2]) - universe[x, y]
-    if universe[x, y] and not 2 <= num_neighbours <= 3:
-        return 0
-    if num_neighbours == 3:
-        return 1
-    return universe[x, y]
+    def nextCell(self, x, y):
+        num_neighbours = np.sum(self._universe[x - 1 : x + 2, y - 1 : y + 2]) - self._universe[x, y]
+        if self._universe[x, y] and not 2 <= num_neighbours <= 3:
+            return 0
+        if num_neighbours == 3:
+            return 1
+        return self._universe[x, y]
