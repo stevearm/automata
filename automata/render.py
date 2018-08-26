@@ -1,6 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')
 
+import matplotlib.colors
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
@@ -13,6 +14,7 @@ class AnimatedGif:
         self.fig = plt.figure(dpi=dpi)
         plt.axis("off")
         self.colors = colors
+        self.normalize = matplotlib.colors.Normalize()
         self.dimensions = None
 
     def append(self, universe):
@@ -23,7 +25,7 @@ class AnimatedGif:
         if self.dimensions != universe.shape:
             raise ValueError("Shape changed from {} to {}".format(self.dimensions, universe.shape))
 
-        self.frames.append((plt.imshow(universe, cmap=self.colors),))
+        self.frames.append((plt.imshow(universe, norm=self.normalize, cmap=self.colors),))
 
     def render(self, filename, interval=300):
         im_ani = animation.ArtistAnimation(
