@@ -32,13 +32,19 @@ class Diffusion(automata.scenario.Scenario):
     def step(self):
         for personNumber in range(len(self._peopleLocations)):
             # Choose an adjacent square with lower population
-            newPerson = self._peopleLocations[personNumber]
-            xRange = range(max(0, newPerson[0] - 1), min(newPerson[0] + 2, self._universe.shape[0]))
-            yRange = range(max(0, newPerson[1] - 1), min(newPerson[1] + 2, self._universe.shape[1]))
+            # Handle multiple squares with the same population and choose between randomly
+            newPeople = [self._peopleLocations[personNumber]]
+            xRange = range(max(0, newPeople[0][0] - 1), min(newPeople[0][0] + 2, self._universe.shape[0]))
+            yRange = range(max(0, newPeople[0][1] - 1), min(newPeople[0][1] + 2, self._universe.shape[1]))
             for x in xRange:
                 for y in yRange:
-                    if self._universe[x,y] < self._universe[newPerson]:
-                        newPerson = (x,y)
+                    if self._universe[x,y] < self._universe[newPeople[0]]:
+                        newPeople = [(x,y)]
+                    elif self._universe[x,y] == self._universe[newPeople[0]]:
+                        newPeople.append((x,y))
+
+            # If we had multiple options, choose one randomly
+            newPerson = random.choice(newPeople)
 
             # Move to new square. This happens live, so person 2 will decide by seeing person 1's new location
             self._universe[self._peopleLocations[personNumber]] -= 1
