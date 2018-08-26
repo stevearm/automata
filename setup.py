@@ -2,6 +2,8 @@
 
 from distutils.core import setup
 
+# pip install -e .
+
 setup(  name="automata",
         version="1.0",
         description="Simulation experements",
