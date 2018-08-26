@@ -2,19 +2,16 @@ import random
 
 import numpy as np
 
-import automata.utils.render
-
-def run():
+def seed():
     field_size = 128
     populated_spots = 100
     people_per_spot_range = (800,1000)
 
     field = np.zeros((field_size, field_size), dtype=np.int32)
-    people = []
 
-    # Fill 100 squares with 100 people each
+    # Fill squares with people
     for i in range(populated_spots):
-        add_people(field, people, people_per_spot_range)
+        add_people(field, people_per_spot_range)
 
     def get_field_as_rgb():
         return automata.utils.render.scale_and_convert_to_rgb(field, 0, people_per_spot_range[1] + 1)
@@ -35,7 +32,7 @@ def run():
             move_people(field, people)
         automata.utils.render.save_rgb_grid_as_image(get_field_as_rgb(), filename="output.{0:03}.png".format(i))
 
-def add_people(field, people_list, people_count_range):
+def add_people(field, people_count_range):
     x_max = len(field)
     y_max = len(field[0])
     people_count = random.randrange(*people_count_range)
@@ -44,9 +41,10 @@ def add_people(field, people_list, people_count_range):
         y = random.randrange(y_max)
         if field[x,y] == 0:
             field[x,y] = people_count
-            for i in range(people_count):
-                people_list.append(dict(x=x, y=y))
             return
+
+def step(x, y, universe):
+    return universe[x, y]
 
 def move_people(field, people):
     for person in people:

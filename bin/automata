@@ -3,15 +3,55 @@
 import argparse
 import logging
 
+import numpy as np
+
+from automata.render import AnimatedGif
+import automata.life
 import automata.diffusion
 
 def main():
     logging.basicConfig(level=logging.ERROR)
     parser = argparse.ArgumentParser(description="Simulate some things")
     parser.add_argument("--verbose", action="store_true", help="Print lots of messages")
+    parser.add_argument("--steps", type=int, default=100, help="Number of steps to model (default: %(default)s)")
+    parser.add_argument("--filename", default="model.gif", help="File to output to (default: %(default)s)")
+    parser.add_argument("--game", default="life", choices=["life", "diffusion"], help="Game to run (default: %(default)s)")
+    parser.add_argument("--seed", default="seed", help="Seed to use (default: %(default)s)")
+    parser.add_argument("--step", default="step", help="Step to use (default: %(default)s)")
 
     args = parser.parse_args()
-    automata.diffusion.run()
+
+    try:
+        game = dict(life=automata.life, diffusion=automata.diffusion)[args.game]
+    except ValueError:
+        print "No game: {}".format(args.game)
+        return False
+
+    try:
+        universe = getattr(game, args.seed)()
+    except AttributeError:
+        print "Game {} has no seed function: {}".format(args.game, args.seed)
+        return False
+
+    try:
+        stepFunction = getattr(game, args.step)
+    except AttributeError:
+        print "Game {} has no step function: {}".format(args.game, args.step)
+        return False
+
+
+    gif = AnimatedGif()
+    gif.append(universe)
+
+    for step in range(args.steps):
+        newUniverse = np.copy(universe)
+        for i in range(universe.shape[0]):
+            for j in range(universe.shape[1]):
+                newUniverse[i, j] = stepFunction(i, j, universe)
+        universe = newUniverse
+        gif.append(universe)
+
+    gif.render(args.filename)
 
 if __name__ == "__main__":
     main()
