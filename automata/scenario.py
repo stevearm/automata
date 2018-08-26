@@ -5,9 +5,9 @@ class Scenario(object):
     """ Setup various rendering things
     """
     def __init__(self, universe=None, dimensions=None):
-        if universe:
+        if universe is not None:
             self._universe = universe
-        elif dimensions:
+        elif dimensions is not None:
             self._universe = np.zeros(dimensions)
 
     def universe(self):

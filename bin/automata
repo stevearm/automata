@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import argparse
 import logging
+import sys
 
 import numpy as np
 
@@ -16,25 +18,40 @@ def main():
     parser.add_argument("--steps", type=int, default=100, help="Number of steps to model (default: %(default)s)")
     parser.add_argument("--filename", default="model.gif", help="File to output to (default: %(default)s)")
     parser.add_argument("--scenario", default="life", choices=["life", "diffusion"], help="Scenario to run (default: %(default)s)")
-    parser.add_argument("--seed", default="seed", help="Seed to use (default: %(default)s)")
-    parser.add_argument("--step", default="step", help="Step to use (default: %(default)s)")
+    parser.add_argument("--print-first", action="store_true", help="Print first universe")
+    parser.add_argument("--print-last", action="store_true", help="Print last universe")
+
+    # Print larger np arrays: https://docs.scipy.org/doc/numpy/reference/generated/numpy.set_printoptions.html
+    np.set_printoptions(threshold=5000, linewidth=100)
 
     args = parser.parse_args()
 
     try:
-        scenarioClass = dict(life=automata.life.Life, diffusion=automata.diffusion)[args.scenario]
+        scenarioClass = dict(life=automata.life.Life, diffusion=automata.diffusion.Diffusion)[args.scenario]
     except ValueError:
-        print "No scenario: {}".format(args.scenario)
+        print("No scenario: {}".format(args.scenario))
         return False
 
+    print("Initializing {}".format(scenarioClass))
     scenario = scenarioClass()
     gif = AnimatedGif()
     gif.append(scenario.universe())
 
+    if args.print_first:
+        print(scenario.universe())
+
+    print("Simulating {} steps".format(args.steps))
     for step in range(args.steps):
         gif.append(scenario.step())
+        print(".", end="")
+        sys.stdout.flush()
+    print("")
 
+    print("Exporting to {}".format(args.filename))
     gif.render(args.filename)
+
+    if args.print_last:
+        print(scenario.universe())
 
 if __name__ == "__main__":
     main()

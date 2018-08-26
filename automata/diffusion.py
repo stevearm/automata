@@ -2,68 +2,47 @@ import random
 
 import numpy as np
 
-def seed():
-    field_size = 128
-    populated_spots = 100
-    people_per_spot_range = (800,1000)
+import automata.scenario
 
-    field = np.zeros((field_size, field_size), dtype=np.int32)
+class Diffusion(automata.scenario.Scenario):
 
-    # Fill squares with people
-    for i in range(populated_spots):
-        add_people(field, people_per_spot_range)
+    def __init__(self, dimensions=[128,128], populatedSquares=100, populationRange=(800, 1000)):
+        super(Diffusion, self).__init__(universe=np.zeros(dimensions, dtype=np.int32))
 
-    def get_field_as_rgb():
-        return automata.utils.render.scale_and_convert_to_rgb(field, 0, people_per_spot_range[1] + 1)
+        # Fill squares with people
+        self._peopleLocations = []
+        for i in range(populatedSquares):
+            self.addPeople(populationRange)
 
-    # automata.utils.render.save_rgb_grid_as_image(get_field_as_rgb(), filename="output.start.png")
+    """ Populate a random empty square. If field is full this will loop forever
+    """
+    def addPeople(self, peopleCountRange):
+        xMax = len(self._universe)
+        yMax = len(self._universe[0])
+        peopleCount = random.randrange(*peopleCountRange)
+        while True:
+            x = random.randrange(xMax)
+            y = random.randrange(yMax)
+            if self._universe[x,y] == 0:
+                self._universe[x,y] = peopleCount
+                for i in range(peopleCount):
+                    self._peopleLocations.append((x,y))
+                return
 
-    def make_frame(t):
-        move_people(field, people)
-        return get_field_as_rgb()
+    def step(self):
+        for personNumber in range(len(self._peopleLocations)):
+            # Choose an adjacent square with lower population
+            newPerson = self._peopleLocations[personNumber]
+            xRange = range(max(0, newPerson[0] - 1), min(newPerson[0] + 2, self._universe.shape[0]))
+            yRange = range(max(0, newPerson[1] - 1), min(newPerson[1] + 2, self._universe.shape[1]))
+            for x in xRange:
+                for y in yRange:
+                    if self._universe[x,y] < self._universe[newPerson]:
+                        newPerson = (x,y)
 
-    # automata.utils.render.make_video(make_frame, mp4_filename="output.mp4", seconds=5, fps=10)
-    # automata.utils.render.make_video(make_frame, gif_filename="output.gif", seconds=5, fps=4)
+            # Move to new square. This happens live, so person 2 will decide by seeing person 1's new location
+            self._universe[self._peopleLocations[personNumber]] -= 1
+            self._peopleLocations[personNumber] = newPerson
+            self._universe[self._peopleLocations[personNumber]] += 1
 
-    # automata.utils.render.save_rgb_grid_as_image(get_field_as_rgb(), filename="output.end.png")
-
-    for i in range(20):
-        for times in range(3):
-            move_people(field, people)
-        automata.utils.render.save_rgb_grid_as_image(get_field_as_rgb(), filename="output.{0:03}.png".format(i))
-
-def add_people(field, people_count_range):
-    x_max = len(field)
-    y_max = len(field[0])
-    people_count = random.randrange(*people_count_range)
-    while True:
-        x = random.randrange(x_max)
-        y = random.randrange(y_max)
-        if field[x,y] == 0:
-            field[x,y] = people_count
-            return
-
-def step(x, y, universe):
-    return universe[x, y]
-
-def move_people(field, people):
-    for person in people:
-        move_person(field, person)
-
-def move_person(field, person):
-    my_x = person["x"]
-    my_y = person["y"]
-    x_max = len(field)
-    y_max = len(field[0])
-    current_density = field[my_x, my_y]
-    new_x = my_x
-    new_y = my_y
-    for x in range(max(0,my_x-1), min(x_max,my_x+2)):
-        for y in range(max(0,my_y-1), min(y_max,my_y+2)):
-            if field[x,y] < field[new_x, new_y]:
-                new_x = x
-                new_y = y
-    field[my_x, my_y] -= 1
-    field[new_x, new_y] += 1
-    person["x"] = new_x
-    person["y"] = new_y
+        return self._universe
