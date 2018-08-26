@@ -16,10 +16,9 @@ def main():
     parser = argparse.ArgumentParser(description="Simulate some things")
     parser.add_argument("--verbose", action="store_true", help="Print lots of messages")
     parser.add_argument("--steps", type=int, default=100, help="Number of steps to model (default: %(default)s)")
-    parser.add_argument("--filename", default="model.gif", help="File to output to (default: %(default)s)")
+    parser.add_argument("--gif", default="model.gif", help="Image file name (default: %(default)s)")
+    parser.add_argument("--log", default="model.log", help="Log file name (default: %(default)s)")
     parser.add_argument("--scenario", default="life", choices=["life", "diffusion"], help="Scenario to run (default: %(default)s)")
-    parser.add_argument("--print-first", action="store_true", help="Print first universe")
-    parser.add_argument("--print-last", action="store_true", help="Print last universe")
 
     # Print larger np arrays: https://docs.scipy.org/doc/numpy/reference/generated/numpy.set_printoptions.html
     np.set_printoptions(threshold=5000, linewidth=100)
@@ -37,8 +36,11 @@ def main():
     gif = AnimatedGif()
     gif.append(scenario.universe())
 
-    if args.print_first:
-        print(scenario.universe())
+    with open(args.log, "w") as logfile:
+        logfile.write("Starting universe\n")
+        np.set_printoptions(threshold=50000, linewidth=1000)
+        logfile.write("{}\n".format(scenario.universe()))
+        np.set_printoptions()
 
     print("Simulating {} steps".format(args.steps))
     for step in range(args.steps):
@@ -47,11 +49,14 @@ def main():
         sys.stdout.flush()
     print("")
 
-    print("Exporting to {}".format(args.filename))
-    gif.render(args.filename)
+    print("Exporting to {}".format(args.gif))
+    gif.render(args.gif)
 
-    if args.print_last:
-        print(scenario.universe())
+    with open(args.log, "a") as logfile:
+        logfile.write("Finishing universe\n")
+        np.set_printoptions(threshold=50000, linewidth=1000)
+        logfile.write("{}\n".format(scenario.universe()))
+        np.set_printoptions()
 
 if __name__ == "__main__":
     main()
